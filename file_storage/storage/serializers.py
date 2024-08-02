@@ -1,6 +1,9 @@
 from .models import File
 from django.contrib.auth.models import User
 from rest_framework import serializers
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,3 +25,11 @@ class FileSerializer(serializers.ModelSerializer):
             'download_link'
         ]
         read_only_fields = ['user',]
+
+        def validate_storage_path(self, value):
+            logger.debug(f"Validating storage_path: {value}")
+            return value
+
+        def create(self, validated_data):
+            logger.debug(f"Creating file with data: {validated_data}")
+            return super().create(validated_data)

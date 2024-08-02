@@ -87,7 +87,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'storage_db',
         'USER': 'postgres',
-        'PASSWORD': '1qaz@WSX',
+        'PASSWORD': '123',
         'HOST': 'localhost',
         'PORT': '5433'
     }
@@ -142,14 +142,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.UserRateThrottle',
-        'rest_framework.throttling.AnonRateThrottle'
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'user': '10/minute',
-        'anon': '2/minute',
-    }
+    # 'DEFAULT_THROTTLE_CLASSES': [
+    #     'rest_framework.throttling.UserRateThrottle',
+    #     'rest_framework.throttling.AnonRateThrottle'
+    # ],
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'user': '10/minute',
+    #     'anon': '2/minute',
+    # }
 }
 
 LOGGING = {

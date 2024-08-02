@@ -1,11 +1,15 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+import logging
+import pdb; pdb.set_trace()
 
-from storage.permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly
 from .models import File
 from .serializers import UserSerializer, FileSerializer
 from django.contrib.auth.models import User
 
+logger = logging.getLogger(__name__)
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -23,9 +27,16 @@ class FileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
-        file = serializer.validated_data['storage_path']
-        serializer.save(
-            user=self.request.user,
-            original_name=file.name,
-            size=file.size
-        )
+        logger.debug("Entering perform_create")
+        try:
+            file = serializer.validated_data['storage_path']
+            logger.debug(f"File received: {file.name}, size: {file.size}")
+            serializer.save(
+                user=self.request.user,
+                original_name=file.name,
+                size=file.size
+            )
+            logger.debug("File saved successfully")
+        except Exception as e:
+            logger.error(f"Error saving file: {e}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
