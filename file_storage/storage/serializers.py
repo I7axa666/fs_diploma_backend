@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'is_staff']
+        # fields = ['id', 'username', 'email', 'is_staff']
+        # fields = '__all__'
+        fields = ['id', 'is_staff',]
 
 class FileSerializer(serializers.ModelSerializer):
     class Meta:

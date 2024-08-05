@@ -1,8 +1,10 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from django.conf import settings
 import logging
-import pdb; pdb.set_trace()
+import os
+# import pdb; pdb.set_trace()
 
 from .permissions import IsOwnerOrReadOnly
 from .models import File
@@ -10,9 +12,15 @@ from .serializers import UserSerializer, FileSerializer
 from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        logger.debug(f"User list response data: {response.data}")
+        return response
 
     def get_permissions(self):
         if self.action in ['create']:
@@ -40,3 +48,20 @@ class FileViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"Error saving file: {e}")
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        file_path = instance.storage_path.path
+        print(file_path)
+        self.perform_destroy(instance)
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                logger.debug(f"File {file_path} deleted successfully")
+            except Exception as e:
+                logger.error(f"Error deleting file {file_path}: {e}")
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
