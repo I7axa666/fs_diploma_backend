@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 
-from storage.views import UserViewSet, FileViewSet
+from storage.views import UserViewSet, FileViewSet, FileDownloadView
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('auth/', include('djoser.urls')),
     re_path(r'^auth/', include('djoser.urls.authtoken')),
+    path('files/download/<str:share_token>/', FileDownloadView.as_view(), name='file-download'),
 ]
 
 if settings.DEBUG:
