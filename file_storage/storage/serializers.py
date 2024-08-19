@@ -28,13 +28,23 @@ class FileSerializer(serializers.ModelSerializer):
             'download_link',
             'is_shared'
         ]
-        read_only_fields = ['user', 'original_name', 'size', 'upload_date', 'last_download_date', 'download_link', 'is_shared']
+        read_only_fields = [
+            'user',
+            'original_name',
+            'size',
+            'upload_date',
+            'last_download_date',
+            'download_link',
+            'is_shared'
+        ]
 
     def get_storage_path(self, obj):
         request = self.context.get('request')
-        if request:
-            return request.build_absolute_uri(obj.storage_path.url)
-        return obj.storage_path.url
+        if obj.storage_path and hasattr(obj.storage_path, 'url'):
+            if request:
+                return request.build_absolute_uri(obj.storage_path.url)
+            return obj.storage_path.url
+        return None
 
     def validate_storage_path(self, value):
         logger.debug(f"Validating storage_path: {value}")

@@ -33,4 +33,3 @@ class File(models.Model):
         self.download_link = None
         self.is_shared = False
         self.save()
-

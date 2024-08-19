@@ -1,5 +1,5 @@
 from django.utils import timezone
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -15,7 +15,7 @@ from .models import File
 from .serializers import UserSerializer, FileSerializer
 from django.contrib.auth.models import User
 
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -38,25 +38,36 @@ class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
-    def perform_create(self, serializer):
-        # logger.debug("Entering perform_create")
+    def list(self, request, *args, **kwargs):
         try:
-            file = serializer.validated_data['storage_path']
-            # logger.debug(f"File received: {file.name}, size: {file.size}")
-            serializer.save(
+            response = super().list(request, *args, **kwargs)
+            return response
+        except ValueError as e:
+            logger.error(f"Error in list view: {e}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def perform_create(self, serializer):
+        logger.debug("Entering perform_create")
+        try:
+            file = self.request.FILES['storage_path']
+            logger.debug(f"File received: {file.name}, size: {file.size}")
+            instance = serializer.save(
                 user=self.request.user,
                 original_name=file.name,
-                size=file.size
+                size=file.size,
+                storage_path=file
             )
-            # logger.debug("File saved successfully")
+            logger.debug(f"File instance: {instance}")
+            logger.debug(f"File storage_path: {instance.storage_path}")
+            logger.debug("File saved successfully")
         except Exception as e:
-            # logger.error(f"Error saving file: {e}")
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            logger.error(f"Error saving file: {e}")
+            raise serializers.ValidationError({'error': str(e)})
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         file_path = instance.storage_path.path
-        # print(file_path)
+        print(file_path)
         self.perform_destroy(instance)
         if os.path.exists(file_path):
             try:
@@ -90,7 +101,6 @@ class FileDownloadView(View):
             file.last_download_date = timezone.now()
             file.save()
 
-            # Сериализация данных файла
             serializer = FileSerializer(file, context={'request': request})
             return JsonResponse(serializer.data, safe=False)
         except File.DoesNotExist:
