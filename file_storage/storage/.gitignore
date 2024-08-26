@@ -1,4 +1,4 @@
 !venv/
 file_storage/storage/debug.log
 venv/
-file_storage/.env
+../.env

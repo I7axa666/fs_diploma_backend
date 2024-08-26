@@ -10,7 +10,7 @@ import logging
 import os
 # import pdb; pdb.set_trace()
 
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsStaffUser
 from .models import File
 from .serializers import UserSerializer, FileSerializer
 from django.contrib.auth.models import User
@@ -98,7 +98,7 @@ class FileViewSet(viewsets.ModelViewSet):
         file.revoke_share_link()
         return Response({'message': 'Доступ к файлу закрыт'}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, IsStaffUser])
     def user_files(self, request):
         user_id = request.query_params.get('user_id')
         print(request.query_params )
@@ -109,6 +109,9 @@ class FileViewSet(viewsets.ModelViewSet):
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != user and not request.user.is_staff:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
         files = File.objects.filter(user=user)
         serializer = self.get_serializer(files, many=True)
@@ -129,6 +132,7 @@ class FileDownloadView(View):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsStaffUser]
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
@@ -140,4 +144,4 @@ class UserViewSet(viewsets.ModelViewSet):
             return []
         elif self.action in ['destroy']:
             return [IsAdminUser()]
-        return [IsAuthenticated()]
+        return [IsStaffUser()]

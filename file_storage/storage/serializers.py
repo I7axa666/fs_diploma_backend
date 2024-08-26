@@ -1,16 +1,31 @@
 from .models import File
+from .models import UserProfile
 from django.contrib.auth.models import User
 from rest_framework import serializers
 import logging
 
 logger = logging.getLogger(__name__)
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['file_count', 'total_file_size']
+
 class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(source='userprofile', read_only=True)
+
     class Meta:
         model = User
-        # fields = ['id', 'username', 'email', 'is_staff']
-        # fields = '__all__'
-        fields = ['id', 'is_staff', 'username', 'email']
+        fields = ['id', 'username', 'email', 'profile']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if not hasattr(instance, 'userprofile'):
+            representation['profile'] = {
+                'file_count': 0,
+                'total_file_size': 0
+            }
+        return representation
 
 class FileSerializer(serializers.ModelSerializer):
     storage_path = serializers.SerializerMethodField()

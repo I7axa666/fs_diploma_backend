@@ -33,3 +33,18 @@ class File(models.Model):
         self.download_link = None
         self.is_shared = False
         self.save()
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    file_count = models.PositiveIntegerField(default=0)
+    total_file_size = models.BigIntegerField(default=0)
+
+    def clean(self):
+        if self.file_count < 0:
+            self.file_count = 0
+        if self.total_file_size < 0:
+            self.total_file_size = 0
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
