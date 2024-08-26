@@ -199,6 +199,13 @@ REST_FRAMEWORK = {
 #     'SERIALIZERS': {},
 # }
 
+
+DJOSER = {
+    'SERIALIZERS': {
+        'token_create': 'storage.serializers.CustomTokenCreateSerializer',
+    },
+}
+
 # CORS_ALLOWED_ORIGINS = [
 #      "http://localhost:5173",
 # ]

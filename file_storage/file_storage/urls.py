@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 
-from storage.views import UserViewSet, FileViewSet, FileDownloadView
+from storage.views import UserViewSet, FileViewSet, FileDownloadView, CustomTokenCreateView
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -14,6 +14,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('auth/', include('djoser.urls')),
+    path('auth/token/login/', CustomTokenCreateView.as_view(), name='login'),
     re_path(r'^auth/', include('djoser.urls.authtoken')),
     path('files/download/<str:share_token>/', FileDownloadView.as_view(), name='file-download'),
 ]

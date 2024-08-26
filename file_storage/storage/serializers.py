@@ -1,8 +1,13 @@
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+
 from .models import File
 from .models import UserProfile
 from django.contrib.auth.models import User
 from rest_framework import serializers
 import logging
+
+from djoser.serializers import TokenCreateSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -68,3 +73,39 @@ class FileSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         logger.debug(f"Creating file with data: {validated_data}")
         return super().create(validated_data)
+
+
+class CustomTokenCreateSerializer(serializers.Serializer):
+    username = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
+    password = serializers.CharField()
+
+    def validate(self, attrs):
+        username = attrs.get('username')
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        if (username or email) and password:
+            user = None
+            if email:
+                user = authenticate(request=self.context.get('request'), email=email, password=password)
+            if not user and username:
+                user = authenticate(request=self.context.get('request'), username=username, password=password)
+
+            if not user:
+                msg = _('Unable to log in with provided credentials.')
+                raise serializers.ValidationError(msg, code='authorization')
+        else:
+            msg = _('Must include either "username" or "email" and "password".')
+            raise serializers.ValidationError(msg, code='authorization')
+
+        self.user = user
+        return attrs
+
+    def create(self, validated_data):
+        token, created = Token.objects.get_or_create(user=self.user)
+        return {'auth_token': token.key, 'user_id': self.user.id}
+
+class TokenResponseSerializer(serializers.Serializer):
+    auth_token = serializers.CharField()
+    user_id = serializers.IntegerField()

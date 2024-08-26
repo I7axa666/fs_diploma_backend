@@ -1,4 +1,5 @@
 from django.utils import timezone
+from djoser.views import TokenCreateView
 from rest_framework import viewsets, status, serializers
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
@@ -12,7 +13,7 @@ import os
 
 from .permissions import IsOwnerOrReadOnly, IsStaffUser
 from .models import File
-from .serializers import UserSerializer, FileSerializer
+from .serializers import UserSerializer, FileSerializer, CustomTokenCreateSerializer, TokenResponseSerializer
 from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
@@ -145,3 +146,12 @@ class UserViewSet(viewsets.ModelViewSet):
         elif self.action in ['destroy']:
             return [IsAdminUser()]
         return [IsStaffUser()]
+
+
+class CustomTokenCreateView(TokenCreateView):
+    serializer_class = CustomTokenCreateSerializer
+
+    def _action(self, serializer):
+        token_data = serializer.save()
+        response_serializer = TokenResponseSerializer(token_data)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
