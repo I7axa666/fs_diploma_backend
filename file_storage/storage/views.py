@@ -23,6 +23,11 @@ class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return File.objects.all()
+        return File.objects.filter(user=self.request.user)
+
     def list(self, request, *args, **kwargs):
         try:
             response = super().list(request, *args, **kwargs)
@@ -32,7 +37,6 @@ class FileViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def perform_create(self, serializer):
-        logger.debug("Entering perform_create")
         try:
             file = self.request.FILES['storage_path']
             logger.debug(f"File received: {file.name}, size: {file.size}")
@@ -42,11 +46,9 @@ class FileViewSet(viewsets.ModelViewSet):
                 size=file.size,
                 storage_path=file
             )
-            logger.debug(f"File instance: {instance}")
-            logger.debug(f"File storage_path: {instance.storage_path}")
-            logger.debug("File saved successfully")
+
         except Exception as e:
-            logger.error(f"Error saving file: {e}")
+            # logger.error(f"Error saving file: {e}")
             raise serializers.ValidationError({'error': str(e)})
 
     def destroy(self, request, *args, **kwargs):
@@ -102,7 +104,7 @@ class FileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, IsStaffUser])
     def user_files(self, request):
         user_id = request.query_params.get('user_id')
-        print(request.query_params )
+
         if not user_id:
             return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -6,10 +6,12 @@ from rest_framework.routers import DefaultRouter
 
 from storage.views import UserViewSet, FileViewSet, FileDownloadView, CustomTokenCreateView
 
+
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'files', FileViewSet)
 
+# Основные URL-паттерны
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/me/', UserViewSet.as_view({'get': 'me'}), name='current-user'),
@@ -19,6 +21,7 @@ urlpatterns = [
     re_path(r'^auth/', include('djoser.urls.authtoken')),
     path('files/download/<str:share_token>/', FileDownloadView.as_view(), name='file-download'),
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
