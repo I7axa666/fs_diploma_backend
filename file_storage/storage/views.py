@@ -1,6 +1,6 @@
 from django.utils import timezone
 from djoser.views import TokenCreateView
-from rest_framework import viewsets, status, serializers
+from rest_framework import viewsets, status, serializers, generics, permissions
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -133,11 +133,10 @@ class FileDownloadView(View):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsStaffUser]
+    permission_classes = [IsStaffUser, IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
-        # logger.debug(f"User list response data: {response.data}")
         return response
 
     def get_permissions(self):
@@ -145,8 +144,16 @@ class UserViewSet(viewsets.ModelViewSet):
             return []
         elif self.action in ['destroy']:
             return [IsAdminUser()]
+        elif self.action in ['me']:
+            return [IsAuthenticated()]
         return [IsStaffUser()]
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        user = request.user
+        # logger.debug(f"Authenticated user: {user}")
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
 
 class CustomTokenCreateView(TokenCreateView):
     serializer_class = CustomTokenCreateSerializer

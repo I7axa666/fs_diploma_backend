@@ -135,12 +135,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
     # 'DEFAULT_THROTTLE_CLASSES': [
     #     'rest_framework.throttling.UserRateThrottle',
     #     'rest_framework.throttling.AnonRateThrottle'
@@ -149,7 +151,7 @@ REST_FRAMEWORK = {
     #     'user': '10/minute',
     #     'anon': '2/minute',
     # }
-}
+
 
 # LOGGING = {
 #     'version': 1,

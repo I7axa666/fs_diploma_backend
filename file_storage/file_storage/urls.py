@@ -12,6 +12,7 @@ router.register(r'files', FileViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/users/me/', UserViewSet.as_view({'get': 'me'}), name='current-user'),
     path('api/', include(router.urls)),
     path('auth/', include('djoser.urls')),
     path('auth/token/login/', CustomTokenCreateView.as_view(), name='login'),
