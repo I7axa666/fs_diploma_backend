@@ -104,8 +104,8 @@ class CustomTokenCreateSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         token, created = Token.objects.get_or_create(user=self.user)
-        return {'auth_token': token.key, 'user_id': self.user.id}
+        return {'auth_token': token.key, 'user_name': self.user.username}
 
 class TokenResponseSerializer(serializers.Serializer):
     auth_token = serializers.CharField()
-    user_id = serializers.IntegerField()
+    user_name = serializers.CharField()
