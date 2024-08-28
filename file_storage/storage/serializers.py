@@ -21,7 +21,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'profile']
+        fields = ['id', 'username', 'email', 'profile', 'is_staff']
+        read_only_fields = ['id', 'username', 'email']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
