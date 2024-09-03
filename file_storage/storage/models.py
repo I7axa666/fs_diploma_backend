@@ -24,7 +24,7 @@ class File(models.Model):
 
     def generate_share_link(self):
         self.share_token = get_random_string(32)
-        self.download_link = f"{SITE_URL}files/download/{self.share_token}/"
+        self.download_link = f"{SITE_URL}files/info/{self.share_token}/"
         self.is_shared = True
         self.save()
 
