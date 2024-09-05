@@ -9,7 +9,6 @@ from django.views import View
 from django.conf import settings
 import logging
 import os
-# import pdb; pdb.set_trace()
 
 from .permissions import IsOwnerOrReadOnly, IsStaffUser
 from .models import File
@@ -19,13 +18,11 @@ from django.contrib.auth.models import User
 logger = logging.getLogger(__name__)
 
 class FileViewSet(viewsets.ModelViewSet):
-    queryset = File.objects.all()
+    queryset = File.objects.all() # Добавляем атрибут queryset
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return File.objects.all()
         return File.objects.filter(user=self.request.user)
 
     def list(self, request, *args, **kwargs):
@@ -46,22 +43,17 @@ class FileViewSet(viewsets.ModelViewSet):
                 size=file.size,
                 storage_path=file
             )
-
         except Exception as e:
-            # logger.error(f"Error saving file: {e}")
             raise serializers.ValidationError({'error': str(e)})
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         file_path = instance.storage_path.path
-        print(file_path)
         self.perform_destroy(instance)
         if os.path.exists(file_path):
             try:
                 os.remove(file_path)
-                # logger.debug(f"File {file_path} deleted successfully")
             except Exception as e:
-                # logger.error(f"Error deleting file {file_path}: {e}")
                 return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -113,7 +105,7 @@ class FileViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        if request.user != user and not request.user.is_staff:
+        if not request.user.is_staff:
             return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
         files = File.objects.filter(user=user)
@@ -153,7 +145,6 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
         user = request.user
-        # logger.debug(f"Authenticated user: {user}")
         serializer = self.get_serializer(user)
         return Response(serializer.data)
 
@@ -164,3 +155,4 @@ class CustomTokenCreateView(TokenCreateView):
         token_data = serializer.save()
         response_serializer = TokenResponseSerializer(token_data)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
+    
